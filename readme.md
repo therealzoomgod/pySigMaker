@@ -32,7 +32,9 @@ IDA Pro version: Need feedback but oldest for sure would be IDA Pro 6.9.
 	Report IDA Pro, IDAPython and Python versions this worked on.
 
 ### Confirmed working:
+    IDA Pro 7.0
 	IDA Pro 7.5, IDAPython 64-bit v7.4.0 final, Python 3.8 64 bit
+    IDA Pro 7.6
 
 ### Sig types supported:
 	IDA Patterns : E8 ? ? ? ? 48 8B 83 ? ? ? ? 48 8B CB
