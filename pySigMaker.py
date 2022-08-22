@@ -1,62 +1,27 @@
 # -*- coding: utf-8 -*-
 
+PLUGIN_VERSION = '0.1.50'
+
 # If True the starting address will be current function when making a sig for functions.
 # SigMaker-x64 behavior is to look for 5 or more references before adding function start
 FUNC_START_EA = True
 
-# Plugin hotkey 
+# Can be set via Gui, this is just for a fallback default
 PLUGIN_HOTKEY = 'Ctrl-Alt-S'
 
-PLUGIN_VERSION = '0.1.35'
 
 """
     pySigMaker:
 
     Ported by: zoomgod - unknowncheats.me
 
-    IDAPython port for most of the origional compiled SigMaker-x64 IDA 
-    plugin with some minor changes, bug-fix and new GUI, see below.  
+    IDAPython port for most of the origional compiled SigMaker-x64 IDA
+    plugin with some minor changes, bug-fix and new GUI.
 
     Credits to the origional author/contributors of SigMaker-x64
     https://github.com/ajkhoury/SigMaker-x64
 
-    *** Requires Python 3.5 or newer, tested with 3.8 ***
-
-    Python 2.x is past end of life, no support for it will be added.
-    
-    IDA Pro version: Need feedback but oldest for sure would be IDA Pro 6.9.
-
-    Install:
-        copy pySigMaker.py into IDA plugin folder.
-
-        Note: Default is to use same hotkeys as SigMaker-x64 which will cause 
-              warning to be displayed in IDA if orig SigMaker-x64 plugin exists.
-
-    Default hotkeys:
-        Press Ctrl + Alt + S to show plugin
-
-    Tested with IDA 7.5 Pro using:
-        IDAPython 64-bit v7.4.0 final
-        Python 3.8 64 bit
-
-    Sig types supported:
-        IDA Patterns : E8 ? ? ? ? 48 8B 83 ? ? ? ? 48 8B CB
-        Olly Patterns: E8 ?? ?? ?? ?? 48 8B 83 ?? ?? ?? ?? 48 8B CB
-        Code Patterns: \xE8\x00\x00\x00\x00\x48\x8B\x83\x00\x00\x00\x00\x48\x8B\xCB x????xxx????xxx
-
-    Bug fixes:
-        Fixed issue when using SigMaker-x64 with rebased images (related to ida inf struct)
-
-    Not ported:
-        crc signature portion was dropped.
-
-    Changes:
-        1) Making a sig from selection was replaced with an auto-create at current address.
-        2) Trailing wildcards on sigs are dropped
-        3) Added a new pyQt5 tabbed Gui that can be used in floating or docked modes (can remain open while working).
-        4) LOG_ERROR is minimum output setting now so error messages are always output.
-        5) Improved history, mask automatically restored based on sig selected in drop down.
-
+    See readme for IDA/Python requirements
 """
 
 import sys, pickle, os, shutil
@@ -169,8 +134,8 @@ def BinSearch(query) -> QueryStruct:
     if query.startea == BADADDR:
         query.startea = idaapi.inf_get_max_ea()
 
-    query.ea = idaapi.bin_search( query.startea, query.endea, query.pattern, query.mask, 
-        idaapi.BIN_SEARCH_FORWARD, 
+    query.ea = idaapi.bin_search( query.startea, query.endea, query.pattern, query.mask,
+        idaapi.BIN_SEARCH_FORWARD,
         idaapi.BIN_SEARCH_NOBREAK | idaapi.BIN_SEARCH_NOSHOW )
 
     return query
@@ -230,7 +195,7 @@ def BinQuery(sig, flag = QueryTypes.QUERY_FIRST, startea=None, endea = None):
         return len(Result)
     elif flag == QueryTypes.QUERY_FIRST:
         return BADADDR
-   
+
     raise ValueError('Invalid flag passed')
 
 #
@@ -246,7 +211,7 @@ def Ida2Code(sig) -> str:
 
     Arg:
         sig: IDA style sig
-        
+
     Returns:
         string, string
     """
@@ -272,7 +237,7 @@ def Ida2Olly(sig) -> str:
 
     Arg:
         sig: IDA style sig
-        
+
     Return:
         string
     """
@@ -307,7 +272,7 @@ def Code2Ida(patt, mask=None) -> str:
     p = []
 
     # convert binary string or regular string into a list of ints
-    # Since \ is an escape character in Python have to check 
+    # Since \ is an escape character in Python have to check
     # for varying strings
     if not type(patt) is type(b''):
         if type(patt) is type('') and patt.find('\\') > -1:
@@ -317,7 +282,7 @@ def Code2Ida(patt, mask=None) -> str:
     else:
         # binary string, can just convert to list
         p = list(patt)
-        
+
     if mask and len(mask) != len(p):
         return ''
 
@@ -356,7 +321,7 @@ def GetIdaSig(sig, mask = None) -> str:
 
         # an olly sig without wildcards would be same as an ida sig so this is safe
         if sig.find(' ?? ') > -1:
-            return Olly2Ida(sig)
+            return sig.replace('??', '?')
 
         # Olly sig with no wildcards or already an ida sig
         return sig
@@ -556,7 +521,7 @@ class SigMaker:
         return True
 
     def _chooseSig(self) -> bool:
-        
+
         max = 9999
         selected = -1
 
@@ -620,8 +585,8 @@ class SigMaker:
         self.__plugin.log(txt, LogOptions.LOG_RESULT)
 
         #
-        # Qt has a clipboard widget but I didn't want to place a QT 
-        # requirement on using the class since it has nothing to do 
+        # Qt has a clipboard widget but I didn't want to place a QT
+        # requirement on using the class since it has nothing to do
         # with the Gui.  TKinter is included with Python.
         #
         r = tkinter.Tk()
@@ -662,7 +627,7 @@ class SigMaker:
         bHaveUniqueSig = False
 
         while not bHaveUniqueSig and len(self.Sigs):
-        
+
             for sigIndex in range(0, len(self.Sigs)):
 
                 if len(self.Sigs[sigIndex].sig) < self.__plugin.Settings.maxSigLength and self._addToSig(sigIndex):
@@ -687,9 +652,9 @@ class SigMaker:
         """
             Rather than create a sig from selection this
             gets current ea from screen and then creates
-            the shortest sig possible.  
+            the shortest sig possible.
 
-            I don't really see a need for making sigs from a 
+            I don't really see a need for making sigs from a
             selection but can add it if enough people need it.
         """
 
@@ -799,14 +764,19 @@ class PluginGui(idaapi.PluginForm):
         self.__plugin.Settings.addHistory(patt, mask)
         self.__plugin.Settings.save()
 
-        p, m = MakeBin(sig)
-        ea = BinSearch(p, m)
+        query = MakeBin(sig)
+
+        result = BinSearch(query)
+
+        #p, m = MakeBin(sig)
+        #ea = BinSearch(p, m)
 
         #
         # Always logging tests to output so set to LOG_ERROR
         #
-        if ea != BADADDR:
-            self.__plugin.log('Sig matched @ 0x%X' % ea, LogOptions.LOG_ERROR)
+        if result != BADADDR:
+            self.__plugin.log('Sig matched @ 0x%X' % result.ea, LogOptions.LOG_ERROR)
+            #self.__plugin.log('Sig matched @ 0x%X' % ea, LogOptions.LOG_ERROR)
         else:
             self.__plugin.log('No match found', LogOptions.LOG_ERROR)
 
@@ -837,8 +807,8 @@ class PluginGui(idaapi.PluginForm):
     def _safeDataChecked(self, checkedState):
         #
         # Checkboxes can be tristate so passed arg is not a bool
-        # 
-        if checkedState == QtCore.Qt.Unchecked: 
+        #
+        if checkedState == QtCore.Qt.Unchecked:
             self.__plugin.Settings.bOnlyReliable = False
         else:
             self.__plugin.Settings.bOnlyReliable = True
@@ -944,7 +914,7 @@ class PluginGui(idaapi.PluginForm):
         layout.addWidget(r2)
         layout.addWidget(r3)
 
-        grp.setLayout(layout)        
+        grp.setLayout(layout)
 
         return grp
 
@@ -1126,7 +1096,7 @@ class PluginSettings:
 
         self.LogLevel = LogOptions.LOG_ERROR
 
-        # Max sig length IE: 'E9 ?' is length of 2 
+        # Max sig length IE: 'E9 ?' is length of 2
         self.maxSigLength = 100
 
         # Sig test history
@@ -1168,7 +1138,7 @@ class PluginSettings:
         self._history = hist
 
     def load(self):
-        
+
         if self.__loaded:
             return
 
@@ -1180,7 +1150,7 @@ class PluginSettings:
             self.__plugin.log('pySigMaker: Using defaults', LogOptions.LOG_ERROR)
             return False
 
-        
+
         d  = {}
         fh = None
 
@@ -1273,7 +1243,7 @@ class sigmaker_t(idaapi.plugin_t):
         if not gsigmaker:
             gsigmaker = SigMakerPlugin()
         gsigmaker.showGui()
-        
+
     def term(self):
         global gsigmaker
         gsigmaker = None
