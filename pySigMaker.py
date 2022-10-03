@@ -765,25 +765,13 @@ class PluginGui(idaapi.PluginForm):
         self.__plugin.Settings.save()
 
         query = MakeBin(sig)
-<<<<<<< HEAD
         result = BinSearch(query)
-=======
-
-        result = BinSearch(query)
-
-        #p, m = MakeBin(sig)
-        #ea = BinSearch(p, m)
->>>>>>> 5b82e85b2e69e65967d94d0c46e470d88bee5efd
 
         #
         # Always logging tests to output so set to LOG_ERROR
         #
         if result != BADADDR:
             self.__plugin.log('Sig matched @ 0x%X' % result.ea, LogOptions.LOG_ERROR)
-<<<<<<< HEAD
-=======
-            #self.__plugin.log('Sig matched @ 0x%X' % ea, LogOptions.LOG_ERROR)
->>>>>>> 5b82e85b2e69e65967d94d0c46e470d88bee5efd
         else:
             self.__plugin.log('No match found', LogOptions.LOG_ERROR)
 
